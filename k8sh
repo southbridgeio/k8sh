@@ -11,6 +11,11 @@ ct() {
 }
 export -f ct
 
+ctx() {
+  ct "$@"
+}
+export -f ctx
+
 _ct_completions()
 {
   local contexts=$(k config get-contexts -o=name | sort -n)
@@ -83,10 +88,10 @@ k8sh_init() {
   PS_RESTORE='\[\033[0m\]'
 
   # Functional colors
-  CONTEXT_COLOR=$LRED
-  PS_CONTEXT_COLOR=$PS_LRED
-  NAMESPACE_COLOR=$LCYAN
-  PS_NAMESPACE_COLOR=$PS_LCYAN
+  CONTEXT_COLOR=$WHITE
+  PS_CONTEXT_COLOR=$PS_RESTORE
+  NAMESPACE_COLOR=$LGREEN
+  PS_NAMESPACE_COLOR=$PS_LGREEN
 
   echo ""
   echo -e "${LPURPLE}Welcome to k${LRED}8${LPURPLE}sh${RESTORE}"
@@ -145,6 +150,7 @@ k8sh_init() {
 
   complete -F _ns_completions ns
   complete -F _ct_completions ct
+  complete -F _ct_completions ctx
 
   local bash_completion_present=$(type -t _get_comp_words_by_ref)
 
@@ -159,7 +165,17 @@ k8sh_init() {
   fi
 
   # Set up PS1 prompt
-  export PS1="($PS_CONTEXT_COLOR\$KUBECTL_CONTEXT$PS_RESTORE/$PS_NAMESPACE_COLOR\$KUBECTL_NAMESPACE$PS_RESTORE) \W ${PS_LPURPLE}\$${PS_RESTORE} "
+  if [ "$(id -u)" = "0" ]; then
+    SETCOLOR_USER='\[ESC[1;31m\]'
+    SET_SEP='# '
+  else
+    SETCOLOR_USER='\[ESC[1;32m\]'
+    SET_SEP="$ "
+  fi
+
+  # Set up PS1 prompt
+
+  export PS1="${PS_CYAN}[$PS_RESTORE($PS_CONTEXT_COLOR\$KUBECTL_CONTEXT$PS_RESTORE/$PS_NAMESPACE_COLOR\$KUBECTL_NAMESPACE$PS_RESTORE) ${PS_CYAN}\w]${SET_SEP}${PS_RESTORE}"
 
   reloadExtensions
 

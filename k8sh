@@ -6,7 +6,8 @@ ct() {
     echo "$contexts"
     return
   fi
-  export KUBECTL_CONTEXT=$1
+  kubectl config use-context "$1"
+  export KUBECTL_CONTEXT="$1"
 }
 export -f ct
 
@@ -23,7 +24,8 @@ ns() {
     echo "${namespaces}"
     return
   fi
-  export KUBECTL_NAMESPACE=$1
+  kubectl config set-context --current --namespace="$1"
+  export KUBECTL_NAMESPACE="$1"
 }
 export -f ns
 

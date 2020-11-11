@@ -6,8 +6,11 @@ ct() {
     echo "$contexts"
     return
   fi
-  kubectl config use-context "$1"
+  kubectl config use-context "$1" >/dev/null
   export KUBECTL_CONTEXT="$1"
+  local namespace="$(k config view -o=jsonpath="{.contexts[?(@.name==\"${1}\")].context.namespace}")"
+  #"
+  [ -n "$namespace" ] && export KUBECTL_NAMESPACE="$namespace"
 }
 export -f ct
 
@@ -29,7 +32,7 @@ ns() {
     echo "${namespaces}"
     return
   fi
-  kubectl config set-context --current --namespace="$1"
+  kubectl config set-context --current --namespace="$1" >/dev/null
   export KUBECTL_NAMESPACE="$1"
 }
 export -f ns
@@ -101,10 +104,12 @@ k8sh_init() {
   fi
   echo "Gathering current kubectl state..."
   export KUBECTL_CONTEXT=$(kubectl config current-context)
-  export KUBECTL_NAMESPACE=${DEFAULT_NAMESPACE-default}
+  local namespace="$(kubectl config view -o=jsonpath="{.contexts[?(@.name==\"${KUBECTL_CONTEXT}\")].context.namespace}")"
+  #"
+  export KUBECTL_NAMESPACE=${namespace:-default}
 
   echo "Making aliases..."
-  alias kubectl="kubectl --context \$KUBECTL_CONTEXT --namespace \$KUBECTL_NAMESPACE"
+#  alias kubectl="kubectl --context \$KUBECTL_CONTEXT --namespace \$KUBECTL_NAMESPACE"
   alias k="kubectl"
 
   # Common actions
